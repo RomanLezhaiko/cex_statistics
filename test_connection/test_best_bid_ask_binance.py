@@ -4,7 +4,7 @@ import asyncio
 
 async def websocket_data():
     url = 'wss://fstream.binance.com/ws/bnbusdt@bookTicker'
-    
+        
     async with websockets.connect(url) as ws:
         while True:
             data = await ws.recv()
