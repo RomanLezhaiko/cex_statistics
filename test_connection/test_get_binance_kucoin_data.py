@@ -31,7 +31,18 @@ class Data(object):
         if self.__binance is None or self.__kucoin is None:
             return 'Not all data is collected'
         
-        return 'Data Kucoin: ' + str(self.__kucoin) + '\nData Binance: ' + str(self.__binance) + '\nKeys: ' + str(self.__kucoin.keys())
+        return 'Data Kucoin: ' + str(self.__kucoin) + '\nData Binance: ' + str(self.__binance)
+    
+
+    def get_arbitrage(self):
+        if self.__binance is None or self.__kucoin is None:
+            return 'Not all data is collected'
+        
+        if float(self.__kucoin['bestBid']) < float(self.__binance['a']):
+            return 'buy on kucoin, sell on binance  ' + str(float(self.__binance['a']) / float(self.__kucoin['bestBid']))
+        
+        if float(self.__binance['b']) < float(self.__kucoin['bestAsk']):
+            return 'buy on binance, sell on kucoin  ' + str(float(self.__kucoin['bestAsk']) / float(self.__binance['b']))
 
 
 async def websocket_data(token: str, all_data: Data):
@@ -49,19 +60,22 @@ async def websocket_data(token: str, all_data: Data):
             if res_1['type'] == 'welcome':
                 data_tmp = {
                     "type": "subscribe",
-                    "topic": "/market/ticker:BTC-USDT",
+                    "topic": "/market/ticker:BNB-USDT",
                     "response": True
                 }
                 json_data = json.dumps(data_tmp)
                 await ws_kucoin.send(json_data)
-            else:
+            elif res_1['type'] == 'message':
                 # print('Data 1: ---', res_1)
-                all_data.set_kucoin(res_1)
-                print(all_data.get_info())
+                # print(type(res_1))
+                all_data.set_kucoin(res_1['data'])
+                # print(all_data.get_info())
+                print(all_data.get_arbitrage())
             
             # print('Data 2: ---', res_2)
             all_data.set_binance(res_2)
-            print(all_data.get_info())
+            # print(all_data.get_info())
+            print(all_data.get_arbitrage())
 
 
 response = requests.post(url='https://api.kucoin.com/api/v1/bullet-public')
